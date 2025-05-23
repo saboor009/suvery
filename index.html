@@ -6,6 +6,7 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://unpkg.com/survey-core@1.9.92/survey.core.min.js"></script>
   <script src="https://unpkg.com/survey-jquery@1.9.92/survey.jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link href="https://unpkg.com/survey-core@1.9.92/defaultV2.min.css" rel="stylesheet" />
   <style>
     /* Your existing CSS styles (unchanged) */
@@ -147,45 +148,77 @@
   </style>
 </head>
 <body>
-
-  <div class="top-bar">
+<div class="top-bar">
     <label class="upload-label">
       Upload Audio
       <input type="file" id="audioUpload" accept="audio/*" hidden />
     </label>
 
-  <select id="formSelector" class="form-selector" aria-label="Select Form Type">
-  <option value="NewPatient">New Patient</option>
-  <option value="ReturningPatient">Returning Patient</option>
-  <!-- <option value="NewPatientVisit">New Patient Visit</option> -->
-  <option value="FocusedEmergencyDeptVisit">Focused Emergency Dept Visit</option>
-  <option value="NewAddictionMedVisit">New Addiction Med Visit</option>
-  <option value="ReturnPsychVisit">Return Psych Visit</option>
-  <option value="PsychotherapySubjective">Psychotherapy Session</option>
-  <option value="FollowUpVisit">Follow-Up Visit</option>
-  <option value="ReturnBehavioralHealthVisit">Return Behavioral Health Visit</option>
-  <option value="NewMedicalVisit">New Medical Visit</option>
-  <option value="ReturnAddictionMedVisit">Return Addiction Med Visit</option>
-  <option value="NewBehavioralHealthVisit">New Behavioral Health Visit</option>
-  <option value="NewPsychVisit">New Psych Visit</option>
-  <option value="ReturnMedicalVisit">Return Medical Visit</option>
-</select>
+    <select id="formSelector" class="form-selector" aria-label="Select Form Type">
+      <option value="NewPatient">New Patient</option>
+      <option value="ReturningPatient">Returning Patient</option>
+      <option value="FocusedEmergencyDeptVisit">Focused Emergency Dept Visit</option>
+      <option value="NewAddictionMedVisit">New Addiction Med Visit</option>
+      <option value="ReturnPsychVisit">Return Psych Visit</option>
+      <option value="PsychotherapySubjective">Psychotherapy Session</option>
+      <option value="FollowUpVisit">Follow-Up Visit</option>
+      <option value="ReturnBehavioralHealthVisit">Return Behavioral Health Visit</option>
+      <option value="NewMedicalVisit">New Medical Visit</option>
+      <option value="ReturnAddictionMedVisit">Return Addiction Med Visit</option>
+      <option value="NewBehavioralHealthVisit">New Behavioral Health Visit</option>
+      <option value="NewPsychVisit">New Psych Visit</option>
+      <option value="ReturnMedicalVisit">Return Medical Visit</option>
+    </select>
 
     <button id="togglePatientInfo" title="Patient Info" aria-label="Patient Info">+</button>
 
-    <span id="loadingStatus" class="status-text" aria-live="polite"></span>
+ <input type="file" id="pdfUpload" accept="application/pdf" style="display:none;" />
+<button id="sendPdfBtn" style="
+      padding: 12px 28px;
+      font-weight: 600;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      background-color: #d93025;
+      color: white;
+      box-shadow: 0 4px 8px rgba(217, 48, 37, 0.3);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    ">
+  Send PDF to EMR
+</button>
+
+
+    
+
+    <div id="statusMessage"></div>
+
+    <button id="downloadPdfBtn" disabled style="
+  padding: 12px 28px;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+">
+  Download PDF
+</button>
+
   </div>
+
+  <span id="loadingStatus" class="status-text" aria-live="polite"></span>
 
   <div id="surveyContainer"></div>
 
   <!-- Raw JSON output -->
-<div style="max-width: 700px; margin: 40px auto; padding: 20px; background: #f1f1f1; border-radius: 8px;">
-  <h4 style="margin-top: 0;">Raw JSON Output from Audio</h4>
-  <pre id="rawJsonOutput" style="white-space: pre-wrap; background: #fff; padding: 12px; border-radius: 6px; overflow-x: auto;"></pre>
-</div>
-
-
- 
+  <div style="max-width: 700px; margin: 40px auto; padding: 20px; background: #f1f1f1; border-radius: 8px;">
+    <h4 style="margin-top: 0;">Raw JSON Output from Audio</h4>
+    <pre id="rawJsonOutput" style="white-space: pre-wrap; background: #fff; padding: 12px; border-radius: 6px; overflow-x: auto;"></pre>
+  </div>
 
   <!-- Patient Info Modal -->
   <div id="patientInfoModal" role="dialog" aria-modal="true" aria-labelledby="patientInfoModalTitle">
@@ -219,7 +252,6 @@
 
 
   <script>
-
 
     const formTemplates = {
       NewPatient: {
@@ -761,6 +793,227 @@ function fillSurveyFromData(data) {
       }
     });
   
+
+const pdfInput = document.getElementById("pdfUpload");
+const sendBtn = document.getElementById("sendPdfBtn");
+const statusMsg = document.getElementById("statusMessage");
+
+pdfInput.addEventListener("change", () => {
+  sendBtn.disabled = !pdfInput.files.length;
+  statusMsg.textContent = "";
+});
+sendBtn.addEventListener("click", async () => {
+  const rawJsonOutput = document.getElementById("rawJsonOutput").textContent.trim();
+
+  if (!rawJsonOutput) {
+    alert("No raw JSON data available to send.");
+    return;
+  }
+
+  try {
+    statusMsg.style.color = "black";
+    statusMsg.textContent = "Generating PDF from JSON data...";
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const splitText = doc.splitTextToSize(rawJsonOutput, 180);
+
+    doc.text("Raw JSON Output from Audio", 10, 10);
+    doc.text(splitText, 10, 20);
+
+    const pdfBlob = doc.output("blob");
+
+    const formData = new FormData();
+    formData.append("file", pdfBlob, "raw_json_output.pdf");
+
+    const url = "https://mmj.advancedcare.com/api/ac/file/upload?patient_id=1";
+
+    statusMsg.textContent = "Uploading PDF generated from JSON...";
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": "8e0f67df-5ce8-4de9-9707-1035d79a3296"
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Upload failed: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+
+    // Show success message
+    statusMsg.style.color = "green";
+    statusMsg.textContent = "✅ PDF generated from JSON uploaded successfully!";
+
+    // Optional popup alert
+    // alert("Data has been sent successfully to EMR!");
+
+    console.log("Upload response:", result);
+
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      statusMsg.textContent = "";
+    }, 5000);
+
+  } catch (err) {
+    console.error(err);
+    statusMsg.style.color = "red";
+    statusMsg.textContent = `Error: ${err.message}`;
+  }
+});
+
+
+ document.addEventListener("DOMContentLoaded", () => {
+      const pdfInput = document.getElementById("pdfUpload");
+      const sendBtn = document.getElementById("sendPdfBtn");
+      const statusMsg = document.getElementById("statusMessage");
+
+      // Enable send button only when PDF file is selected
+      pdfInput.addEventListener("change", () => {
+        sendBtn.disabled = !pdfInput.files.length;
+        statusMsg.textContent = "";
+      });
+
+      // Send PDF generated from raw JSON output on button click
+      sendBtn.addEventListener("click", async () => {
+        const rawJsonOutput = document.getElementById("rawJsonOutput").textContent.trim();
+
+        if (!rawJsonOutput) {
+          alert("No raw JSON data available to send.");
+          return;
+        }
+
+        try {
+          statusMsg.textContent = "Generating PDF from JSON data...";
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // Split long text to fit page width
+          const splitText = doc.splitTextToSize(rawJsonOutput, 180);
+
+          doc.text("Raw JSON Output from Audio", 10, 10);
+          doc.text(splitText, 10, 20);
+
+          // Output PDF as blob
+          const pdfBlob = doc.output("blob");
+
+          // Prepare FormData with generated PDF blob
+          const formData = new FormData();
+          formData.append("file", pdfBlob, "raw_json_output.pdf");
+
+          const url = "https://mmj.advancedcare.com/api/ac/file/upload?patient_id=1";
+
+          statusMsg.textContent = "Uploading PDF generated from JSON...";
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Authorization": "8e0f67df-5ce8-4de9-9707-1035d79a3296"
+              // Do NOT set Content-Type manually when using FormData — browser handles it.
+            },
+            body: formData
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Upload failed: ${response.status} ${errorText}`);
+          }
+
+          const result = await response.json();
+          statusMsg.textContent = "PDF generated from JSON uploaded successfully!";
+          console.log("Upload response:", result);
+        } catch (err) {
+          console.error(err);
+          statusMsg.textContent = `Error: ${err.message}`;
+        }
+      });
+
+      // Call your existing survey load function here if needed
+      // loadSurvey(currentForm);
+    });
+
+
+    const downloadBtn = document.getElementById("downloadPdfBtn");
+
+let lastPdfBlob = null;  // to store the last generated PDF blob
+
+sendBtn.addEventListener("click", async () => {
+  const rawJsonOutput = document.getElementById("rawJsonOutput").textContent.trim();
+
+  if (!rawJsonOutput) {
+    alert("No raw JSON data available to send.");
+    return;
+  }
+
+  try {
+    statusMsg.textContent = "Generating PDF from JSON data...";
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const splitText = doc.splitTextToSize(rawJsonOutput, 180);
+    doc.text("Raw JSON Output from Audio", 10, 10);
+    doc.text(splitText, 10, 20);
+
+    // Output PDF as blob
+    lastPdfBlob = doc.output("blob");
+
+    // Enable download button now that PDF is generated
+    downloadBtn.disabled = false;
+
+    // Prepare FormData and send
+    const formData = new FormData();
+    formData.append("file", lastPdfBlob, "raw_json_output.pdf");
+
+    const url = "https://mmj.advancedcare.com/api/ac/file/upload?patient_id=1";
+
+    statusMsg.textContent = "Uploading PDF generated from JSON...";
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": "8e0f67df-5ce8-4de9-9707-1035d79a3296"
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Upload failed: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    statusMsg.textContent = "PDF generated from JSON uploaded successfully!";
+    console.log("Upload response:", result);
+  } catch (err) {
+    console.error(err);
+    statusMsg.textContent = `Error: ${err.message}`;
+  }
+});
+
+// Download PDF button handler
+downloadBtn.addEventListener("click", () => {
+  if (!lastPdfBlob) {
+    alert("No PDF available for download.");
+    return;
+  }
+
+  const url = URL.createObjectURL(lastPdfBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "raw_json_output.pdf";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
 
     
     // Initial load
