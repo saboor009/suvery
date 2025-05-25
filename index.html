@@ -218,14 +218,12 @@
 
   <div id="surveyContainer"></div>
 
-  <!-- Raw JSON output -->
-  <div style="max-width: 700px; margin: 40px auto; padding: 20px; background: #f1f1f1; border-radius: 8px;">
-    <h4 style="margin-top: 0;">Raw JSON Output from Audio</h4>
-    <pre id="rawJsonOutput" style="white-space: pre-wrap; background: #fff; padding: 12px; border-radius: 6px; overflow-x: auto;">
-  <code class="language-json"></code>
-</pre>
+ <!-- Formatted JSON output -->
+<div style="max-width: 700px; margin: 40px auto; padding: 20px; background: #f1f1f1; border-radius: 8px;">
+  <h4 style="margin-top: 0;">Formatted Output</h4>
+  <div id="formattedJsonOutput" style="background: #fff; padding: 12px; border-radius: 6px; overflow-x: auto;"></div>
+</div>
 
-  </div>
 
   <!-- Patient Info Modal -->
   <div id="patientInfoModal" role="dialog" aria-modal="true" aria-labelledby="patientInfoModalTitle">
@@ -261,196 +259,459 @@
   <script>
 
     const formTemplates = {
-      NewPatient: {
-    title: "New Patient",
-    elements: [
-      { type: "comment", name: "np_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "np_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "np_medical_history", title: "Medical History" },
-      { type: "comment", name: "np_surgical_history", title: "Surgical History" },
-      { type: "comment", name: "np_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "np_allergies", title: "Allergies" },
-      { type: "comment", name: "np_social_history", title: "Social History" },
-      { type: "comment", name: "np_family_history", title: "Family History" },
-      { type: "comment", name: "np_review_of_systems", title: "Review of Systems" },
-      { type: "comment", name: "np_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "np_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "np_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "np_rating_scales", title: "Rating Scales" }
-    ],
-  }, ReturningPatient: {
+     NewPatient: {
+  title: "New Patient",
+  elements: [
+    {
+      type: "panel",
+      name: "subjective_panel",
+      title: "Subjective",
+      elements: [
+        { type: "comment", name: "np_chief_complaint", title: "Chief Complaint" },
+        { type: "comment", name: "np_present_illness", title: "History of Present Illness" },
+        { type: "comment", name: "np_medical_history", title: "Medical History" },
+        { type: "comment", name: "np_surgical_history", title: "Surgical History" },
+        { type: "comment", name: "np_medications_supplements", title: "Medications and Supplements" },
+        { type: "comment", name: "np_allergies", title: "Allergies" },
+        { type: "comment", name: "np_social_history", title: "Social History" },
+        { type: "comment", name: "np_family_history", title: "Family History" },
+        { type: "comment", name: "np_review_of_systems", title: "Review of Systems" }
+      ]
+    },
+    {
+      type: "panel",
+      name: "objective_panel",
+      title: "Objective",
+      elements: [
+        { type: "comment", name: "np_mental_status_exam", title: "Mental Status Examination" },
+        { type: "comment", name: "np_vital_signs", title: "Vital Signs" },
+        { type: "comment", name: "np_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
+        { type: "comment", name: "np_rating_scales", title: "Rating Scales" }
+      ]
+    },
+    {
+      type: "panel",
+      name: "assessment_panel",
+      title: "Assessment and Plan",
+      elements: [
+        { type: "comment", name: "np_assessment_plan", title: "Assessment and Plan" }
+      ]
+    }
+  ]
+},
+ReturningPatient: {
     title: "Returning Patient",
     elements: [
-      { type: "comment", name: "rp_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "rp_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "rp_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "rp_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "rp_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "rp_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "rp_rating_scales", title: "Rating Scales" }
-    ],
+      {
+        type: "panel",
+        name: "subjective_panel",
+        title: "Subjective",
+        elements: [
+          { type: "comment", name: "rp_chief_complaint", title: "Chief Complaint" },
+          { type: "comment", name: "rp_present_illness", title: "History of Present Illness" },
+          { type: "comment", name: "rp_medications_supplements", title: "Medications and Supplements" }
+        ]
+      },
+      {
+        type: "panel",
+        name: "objective_panel",
+        title: "Objective",
+        elements: [
+          { type: "comment", name: "rp_mental_status_exam", title: "Mental Status Examination" },
+          { type: "comment", name: "rp_vital_signs", title: "Vital Signs" },
+          { type: "comment", name: "rp_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
+          { type: "comment", name: "rp_rating_scales", title: "Rating Scales" }
+        ]
+      }
+    ]
   },
-       FocusedEmergencyDeptVisit: {
-    title: "Focused Emergency Dept Visit",
-    elements: [
-      { type: "comment", name: "fud_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "fud_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "fud_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "fud_allergies", title: "Allergies" },
-      { type: "comment", name: "fud_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "fud_physical_exam", title: "Physical Examination" },
-      { type: "comment", name: "fud_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "fud_medical_decision_making", title: "Medical Decision Making" },
-      { type: "comment", name: "fud_assessment_plan", title: "Problem Based Assessment Plan" }
-    ],
-  },
+       FocusedEmergencyDeptVisit:{
+  "title": "Focused Emergency Dept Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "fud_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "fud_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "fud_medications_supplements", "title": "Medications and Supplements" },
+        { "type": "comment", "name": "fud_allergies", "title": "Allergies" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "fud_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "fud_physical_exam", "title": "Physical Examination" },
+        { "type": "comment", "name": "fud_lab_imaging_test_results", "title": "Laboratory, Imaging, and Diagnostic Test Results" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment and Plan",
+      "elements": [
+        { "type": "comment", "name": "fud_medical_decision_making", "title": "Medical Decision Making" },
+        { "type": "comment", "name": "fud_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
      NewAddictionMedVisit: {
-    title: "New Addiction Med Visit",
-    elements: [
-      { type: "comment", name: "nam_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "nam_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "nam_medical_history", title: "Medical History" },
-      { type: "comment", name: "nam_surgical_history", title: "Surgical History" },
-      { type: "comment", name: "nam_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "nam_allergies", title: "Allergies" },
-      { type: "comment", name: "nam_social_history", title: "Social History" },
-      { type: "comment", name: "nam_family_history", title: "Family History" },
-      { type: "comment", name: "nam_review_of_systems", title: "Review of Systems" },
-      { type: "comment", name: "nam_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "nam_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "nam_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "nam_rating_scales", title: "Rating Scales" }
-    ],
-  },
+  "title": "New Addiction Med Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "nam_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "nam_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "nam_medical_history", "title": "Medical History" },
+        { "type": "comment", "name": "nam_surgical_history", "title": "Surgical History" },
+        { "type": "comment", "name": "nam_medications_supplements", "title": "Medications and Supplements" },
+        { "type": "comment", "name": "nam_allergies", "title": "Allergies" },
+        { "type": "comment", "name": "nam_social_history", "title": "Social History" },
+        { "type": "comment", "name": "nam_family_history", "title": "Family History" },
+        { "type": "comment", "name": "nam_review_of_systems", "title": "Review of Systems" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "nam_mental_status_exam", "title": "Mental Status Examination" },
+        { "type": "comment", "name": "nam_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "nam_lab_imaging_test_results", "title": "Laboratory, Imaging, and Diagnostic Test Results" },
+        { "type": "comment", "name": "nam_rating_scales", "title": "Rating Scales" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment and Plan",
+      "elements": [
+        { "type": "comment", "name": "nam_assessment_plan", "title": "Assessment and Plan" }
+      ]
+    }
+  ]
+},
    ReturnPsychVisit: {
-    title: "Return Psych Visit",
-    elements: [
-      { type: "comment", name: "rpv_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "rpv_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "rpv_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "rpv_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "rpv_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "rpv_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "rpv_rating_scales", title: "Rating Scales" },
-      { type: "comment", name: "rpv_assessment_plan", title: "Problem Based Assessment Plan" }
-    ],
-  },
+  "title": "Return Psych Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "rpv_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "rpv_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "rpv_medications_supplements", "title": "Medications and Supplements" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "rpv_mental_status_exam", "title": "Mental Status Examination" },
+        { "type": "comment", "name": "rpv_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "rpv_lab_imaging_test_results", "title": "Laboratory, Imaging, and Diagnostic Test Results" },
+        { "type": "comment", "name": "rpv_rating_scales", "title": "Rating Scales" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment and Plan",
+      "elements": [
+        { "type": "comment", "name": "rpv_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
    PsychotherapySubjective: {
-    title: "Psychotherapy Subjective",
-    elements: [
-      { type: "comment", name: "pss_subjective", title: "Psychotherapy Subjective" },
-      { type: "comment", name: "pss_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "pss_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "pss_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "pss_rating_scales", title: "Rating Scales" },
-      { type: "comment", name: "pss_assessment_plan", title: "Problem Based Assessment Plan" }
-    ],
-  },
-   FollowUpVisit: {
-    title: "Follow-Up Visit",
-    elements: [
-      { type: "comment", name: "fuv_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "fuv_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "fuv_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "fuv_review_of_systems", title: "Review of Systems" },
-      { type: "comment", name: "fuv_physical_exam", title: "Physical Examination" },
-      { type: "comment", name: "fuv_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "fuv_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "fuv_assessment_plan", title: "Problem Based Assessment Plan" }
-    ],
-  },
-  ReturnBehavioralHealthVisit: {
-    title: "Return Behavioral Health Visit",
-    elements: [
-      { type: "comment", name: "rbh_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "rbh_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "rbh_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "rbh_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "rbh_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "rbh_rating_scales", title: "Rating Scales" },
-      { type: "comment", name: "rbh_assessment_plan", title: "Problem Based Assessment Plan" }
-    ],
-  },
+  "title": "Psychotherapy Subjective",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "pss_subjective", "title": "Psychotherapy Subjective" },
+        { "type": "comment", "name": "pss_medications_supplements", "title": "Medications and Supplements" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "pss_mental_status_exam", "title": "Mental Status Examination" },
+        { "type": "comment", "name": "pss_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "pss_rating_scales", "title": "Rating Scales" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment and Plan",
+      "elements": [
+        { "type": "comment", "name": "pss_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
+   FollowUpVisit:{
+  "title": "Follow-Up Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "fuv_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "fuv_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "fuv_medications_supplements", "title": "Medications and Supplements" },
+        { "type": "comment", "name": "fuv_review_of_systems", "title": "Review of Systems" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "fuv_physical_exam", "title": "Physical Examination" },
+        { "type": "comment", "name": "fuv_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "fuv_lab_imaging_test_results", "title": "Laboratory, Imaging, and Diagnostic Test Results" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment and Plan",
+      "elements": [
+        { "type": "comment", "name": "fuv_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
+  ReturnBehavioralHealthVisit:{
+  "title": "Return Behavioral Health Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "rbh_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "rbh_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "rbh_medications_supplements", "title": "Medications and Supplements" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "rbh_mental_status_exam", "title": "Mental Status Examination" },
+        { "type": "comment", "name": "rbh_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "rbh_rating_scales", "title": "Rating Scales" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment and Plan",
+      "elements": [
+        { "type": "comment", "name": "rbh_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
   NewMedicalVisit: {
-    title: "New Medical Visit",
-    elements: [
-      { type: "comment", name: "nmv_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "nmv_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "nmv_medical_history", title: "Medical History" },
-      { type: "comment", name: "nmv_surgical_history", title: "Surgical History" },
-      { type: "comment", name: "nmv_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "nmv_allergies", title: "Allergies" },
-      { type: "comment", name: "nmv_social_history", title: "Social History" },
-      { type: "comment", name: "nmv_family_history", title: "Family History" },
-      { type: "comment", name: "nmv_immunizations", title: "Immunizations" },
-      { type: "comment", name: "nmv_review_of_systems", title: "Review of Systems" },
-      { type: "comment", name: "nmv_physical_exam", title: "Physical Examination" },
-      { type: "comment", name: "nmv_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "nmv_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "nmv_rating_scales", title: "Rating Scales" },
-      { type: "comment", name: "nmv_assessment_plan", title: "Problem Based Assessment Plan" }
-    ],
-  },
+  "title": "New Medical Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "nmv_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "nmv_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "nmv_medical_history", "title": "Medical History" },
+        { "type": "comment", "name": "nmv_surgical_history", "title": "Surgical History" },
+        { "type": "comment", "name": "nmv_medications_supplements", "title": "Medications and Supplements" },
+        { "type": "comment", "name": "nmv_allergies", "title": "Allergies" },
+        { "type": "comment", "name": "nmv_social_history", "title": "Social History" },
+        { "type": "comment", "name": "nmv_family_history", "title": "Family History" },
+        { "type": "comment", "name": "nmv_immunizations", "title": "Immunizations" },
+        { "type": "comment", "name": "nmv_review_of_systems", "title": "Review of Systems" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "nmv_physical_exam", "title": "Physical Examination" },
+        { "type": "comment", "name": "nmv_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "nmv_lab_imaging_test_results", "title": "Laboratory, Imaging, and Diagnostic Test Results" },
+        { "type": "comment", "name": "nmv_rating_scales", "title": "Rating Scales" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment and Plan",
+      "elements": [
+        { "type": "comment", "name": "nmv_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
   ReturnAddictionMedVisit: {
-    title: "Return Addiction Med Visit",
-    elements: [
-      { type: "comment", name: "ramv_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "ramv_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "ramv_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "ramv_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "ramv_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "ramv_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "ramv_rating_scales", title: "Rating Scales" }
-    ],
-  },
+  "title": "Return Addiction Med Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "ramv_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "ramv_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "ramv_medications_supplements", "title": "Medications and Supplements" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "ramv_mental_status_exam", "title": "Mental Status Examination" },
+        { "type": "comment", "name": "ramv_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "ramv_lab_imaging_test_results", "title": "Laboratory, Imaging, and Diagnostic Test Results" },
+        { "type": "comment", "name": "ramv_rating_scales", "title": "Rating Scales" }
+      ]
+    }
+  ]
+},
    NewBehavioralHealthVisit: {
-    title: "New Behavioral Health Visit",
-    elements: [
-      { type: "comment", name: "nbhv_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "nbhv_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "nbhv_medical_history", title: "Medical History" },
-      { type: "comment", name: "nbhv_surgical_history", title: "Surgical History" },
-      { type: "comment", name: "nbhv_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "nbhv_allergies", title: "Allergies" },
-      { type: "comment", name: "nbhv_family_history", title: "Family History" },
-      { type: "comment", name: "nbhv_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "nbhv_rating_scales", title: "Rating Scales" },
-      { type: "comment", name: "nbhv_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "nbhv_assessment_plan", title: "Problem Based Assessment Plan" }
-    ],
-  },
+  "title": "New Behavioral Health Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "nbhv_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "nbhv_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "nbhv_medical_history", "title": "Medical History" },
+        { "type": "comment", "name": "nbhv_surgical_history", "title": "Surgical History" },
+        { "type": "comment", "name": "nbhv_medications_supplements", "title": "Medications and Supplements" },
+        { "type": "comment", "name": "nbhv_allergies", "title": "Allergies" },
+        { "type": "comment", "name": "nbhv_family_history", "title": "Family History" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "nbhv_mental_status_exam", "title": "Mental Status Examination" },
+        { "type": "comment", "name": "nbhv_rating_scales", "title": "Rating Scales" },
+        { "type": "comment", "name": "nbhv_vital_signs", "title": "Vital Signs" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment & Plan",
+      "elements": [
+        { "type": "comment", "name": "nbhv_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
    NewPsychVisit: {
-    title: "New Psych Visit",
-    elements: [
-      { type: "comment", name: "npv_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "npv_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "npv_medical_history", title: "Medical History" },
-      { type: "comment", name: "npv_surgical_history", title: "Surgical History" },
-      { type: "comment", name: "npv_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "npv_allergies", title: "Allergies" },
-      { type: "comment", name: "npv_social_history", title: "Social History" },
-      { type: "comment", name: "npv_family_history", title: "Family History" },
-      { type: "comment", name: "npv_review_of_systems", title: "Review of Systems" },
-      { type: "comment", name: "npv_mental_status_exam", title: "Mental Status Examination" },
-      { type: "comment", name: "npv_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "npv_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "npv_rating_scales", title: "Rating Scales" },
-      { type: "comment", name: "npv_assessment_plan", title: "Problem Based Assessment Plan" }
-    ]},
+  "title": "New Psych Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "npv_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "npv_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "npv_medical_history", "title": "Medical History" },
+        { "type": "comment", "name": "npv_surgical_history", "title": "Surgical History" },
+        { "type": "comment", "name": "npv_medications_supplements", "title": "Medications and Supplements" },
+        { "type": "comment", "name": "npv_allergies", "title": "Allergies" },
+        { "type": "comment", "name": "npv_social_history", "title": "Social History" },
+        { "type": "comment", "name": "npv_family_history", "title": "Family History" },
+        { "type": "comment", "name": "npv_review_of_systems", "title": "Review of Systems" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "npv_mental_status_exam", "title": "Mental Status Examination" },
+        { "type": "comment", "name": "npv_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "npv_lab_imaging_test_results", "title": "Laboratory, Imaging, and Diagnostic Test Results" },
+        { "type": "comment", "name": "npv_rating_scales", "title": "Rating Scales" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment & Plan",
+      "elements": [
+        { "type": "comment", "name": "npv_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
      ReturnMedicalVisit: {
-    title: "Return Medical Visit",
-    elements: [
-      { type: "comment", name: "rmv_chief_complaint", title: "Chief Complaint" },
-      { type: "comment", name: "rmv_present_illness", title: "History of Present Illness" },
-      { type: "comment", name: "rmv_medications_supplements", title: "Medications and Supplements" },
-      { type: "comment", name: "rmv_review_of_systems", title: "Review of Systems" },
-      { type: "comment", name: "rmv_physical_exam", title: "Physical Examination" },
-      { type: "comment", name: "rmv_vital_signs", title: "Vital Signs" },
-      { type: "comment", name: "rmv_lab_imaging_test_results", title: "Laboratory, Imaging, and Diagnostic Test Results" },
-      { type: "comment", name: "rmv_rating_scales", title: "Rating Scales" },
-      { type: "comment", name: "rmv_assessment_plan", title: "Problem Based Assessment Plan" }
-    ],
-  },
+  "title": "Return Medical Visit",
+  "elements": [
+    {
+      "type": "panel",
+      "name": "subjective_panel",
+      "title": "Subjective",
+      "elements": [
+        { "type": "comment", "name": "rmv_chief_complaint", "title": "Chief Complaint" },
+        { "type": "comment", "name": "rmv_present_illness", "title": "History of Present Illness" },
+        { "type": "comment", "name": "rmv_medications_supplements", "title": "Medications and Supplements" },
+        { "type": "comment", "name": "rmv_review_of_systems", "title": "Review of Systems" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "objective_panel",
+      "title": "Objective",
+      "elements": [
+        { "type": "comment", "name": "rmv_physical_exam", "title": "Physical Examination" },
+        { "type": "comment", "name": "rmv_vital_signs", "title": "Vital Signs" },
+        { "type": "comment", "name": "rmv_lab_imaging_test_results", "title": "Laboratory, Imaging, and Diagnostic Test Results" },
+        { "type": "comment", "name": "rmv_rating_scales", "title": "Rating Scales" }
+      ]
+    },
+    {
+      "type": "panel",
+      "name": "assessment_panel",
+      "title": "Assessment & Plan",
+      "elements": [
+        { "type": "comment", "name": "rmv_assessment_plan", "title": "Problem Based Assessment Plan" }
+      ]
+    }
+  ]
+},
       psych_visit: {
         title: "Psych Visit",
         elements: [
@@ -468,6 +729,10 @@
         ]
       }
     };
+
+
+
+
 
    let currentForm = "NewPatient";
     let survey;
@@ -501,9 +766,37 @@
       };
 
       survey = new Survey.Model(surveyJson);
-      survey.onComplete.add(sender => {
-        console.log("Survey results:", sender.data);
-      });
+ survey.onAfterRenderPanel.add((survey, options) => {
+  const panel = options.panel;
+
+  if (panel.name === "subjective_panel" || panel.name === "objective_panel") {
+    const toggleBtn = document.createElement("button");
+    toggleBtn.innerText = "Toggle Fields";
+    toggleBtn.style.marginLeft = "12px";
+    toggleBtn.style.padding = "4px 10px";
+    toggleBtn.style.fontSize = "12px";
+    toggleBtn.style.borderRadius = "4px";
+    toggleBtn.style.cursor = "pointer";
+    toggleBtn.style.backgroundColor = "#f0f0f0";
+    toggleBtn.style.border = "1px solid #ccc";
+
+    let hidden = false;
+
+    toggleBtn.addEventListener("click", () => {
+      hidden = !hidden;
+      panel.elements.forEach(el => el.visible = !hidden);
+    });
+
+    // Fix: more reliable selector
+    const titleEl = options.htmlElement.querySelector(".sv-panel__title");
+    if (titleEl) {
+      titleEl.appendChild(toggleBtn);
+    } else {
+      console.warn("Could not find title element for panel:", panel.name);
+    }
+  }
+});
+
 
       $("#surveyContainer").Survey({ model: survey });
     }
@@ -716,6 +1009,9 @@ function fillSurveyFromData(data) {
 
 
 
+
+
+
     // Toggle Patient Info modal
     document.getElementById("togglePatientInfo").addEventListener("click", () => {
       if (!survey) return;
@@ -785,9 +1081,10 @@ function fillSurveyFromData(data) {
         const data = await response.json();
         console.log("Fetched response from n8n webhook:", data);
         fillSurveyFromData(data);
-const rawOutputEl = document.getElementById("rawJsonOutput").querySelector("code");
-rawOutputEl.textContent = JSON.stringify(data, null, 2);
-Prism.highlightElement(rawOutputEl);
+        const formattedOutputEl = document.getElementById("formattedJsonOutput");
+if (formattedOutputEl && data.formatted_json_output) {
+  formattedOutputEl.innerHTML = data.formatted_json_output;
+}
 
 
 
@@ -810,7 +1107,7 @@ pdfInput.addEventListener("change", () => {
   statusMsg.textContent = "";
 });
 sendBtn.addEventListener("click", async () => {
-  const rawJsonOutput = document.getElementById("rawJsonOutput").textContent.trim();
+  const rawJsonOutput = document.getElementById("formattedJsonOutput").textContent.trim();
 
   if (!rawJsonOutput) {
     alert("No raw JSON data available to send.");
@@ -951,12 +1248,22 @@ sendBtn.addEventListener("click", async () => {
 let lastPdfBlob = null;  // to store the last generated PDF blob
 
 sendBtn.addEventListener("click", async () => {
-  const rawJsonOutput = document.getElementById("rawJsonOutput").textContent.trim();
+ const formattedOutputEl = document.getElementById("formattedJsonOutput");
+const plainText = formattedOutputEl?.innerHTML
+  .replace(/<br\s*\/?>/gi, "\n")
+  .replace(/&nbsp;/g, " ")
+  .replace(/&quot;/g, '"')
+  .replace(/&lt;/g, "<")
+  .replace(/&gt;/g, ">")
+  .replace(/&amp;/g, "&")
+  .replace(/<[^>]+>/g, "")
+  .trim();
 
-  if (!rawJsonOutput) {
-    alert("No raw JSON data available to send.");
-    return;
-  }
+if (!plainText) {
+  alert("No formatted data available to send.");
+  return;
+}
+
 
   try {
     statusMsg.textContent = "Generating PDF from JSON data...";
@@ -964,9 +1271,10 @@ sendBtn.addEventListener("click", async () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    const splitText = doc.splitTextToSize(rawJsonOutput, 180);
-    doc.text("Raw JSON Output from Audio", 10, 10);
-    doc.text(splitText, 10, 20);
+    const splitText = doc.splitTextToSize(plainText, 180);
+doc.text("Formatted JSON Output", 10, 10);
+doc.text(splitText, 10, 20);
+
 
     // Output PDF as blob
     lastPdfBlob = doc.output("blob");
