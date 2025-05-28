@@ -176,6 +176,42 @@
     #patientInfoCancelBtn:hover {
       background-color: #c82333;
     }
+   #surveyLoadingMessage {
+  text-align: center;
+  margin-bottom: 20px;
+  display: none;
+}
+
+#surveyLoadingMessage .loading-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #e9f5ff;
+  color: #0366d6;
+  font-weight: 500;
+  font-size: 15px;
+  border: 1px solid #b6e0fe;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+#surveyLoadingMessage .spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #b6d4fe;
+  border-top-color: #0366d6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
   </style>
 </head>
 <body>
@@ -192,6 +228,7 @@
   </select>
 
   <div id="transcriptContainer">Loading transcripts...</div>
+>
 
 
 
@@ -260,6 +297,13 @@
   <div id="transcriptContainerr"></div> <!-- ✅ This is the one that should stay -->
 </div>
 
+<div id="surveyLoadingMessage">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <span id="surveyLoadingText">Processing transcript and filling the form...</span>
+  </div>
+</div>
+
 
   <div id="surveyContainer"></div>
 
@@ -310,8 +354,11 @@
 
 
    const API_KEY = "OTEaQ3hy00lqC7SGm00brFlB9hJ84HhL"; // Replace with your Speechmatics API key
+   
 
     let transcriptsMap = {}; // Store jobId -> transcript text for quick access
+
+
 async function fetchJobs() {
   try {
     const response = await fetch("https://asr.api.speechmatics.com/v2/jobs/", {
@@ -342,6 +389,8 @@ async function fetchJobs() {
     }async function loadTranscripts() {
   const container = document.getElementById("transcriptContainer");
   const jobSelector = document.getElementById("jobSelector");
+  
+ 
 
   try {
     const jobsData = await fetchJobs();
@@ -354,6 +403,7 @@ async function fetchJobs() {
 
     // Clear container so no transcripts show by default
     container.textContent = "";
+    
 
     // Populate dropdown with job IDs and datetime (formatted)
 jobs.forEach(job => {
@@ -389,7 +439,8 @@ jobs.forEach(job => {
 
   if (!selectedJobId) return;
 
-  container.textContent = "Loading transcript...";
+ document.getElementById("surveyLoadingMessage").textContent = "Processing transcript and filling the form...";
+
 
   try {
 
@@ -1563,62 +1614,6 @@ downloadBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
   
-
-// const API_KEY = "OTEaQ3hy00lqC7SGm00brFlB9hJ84HhL";
-
-// async function fetchJobs() {
-//   const response = await fetch("https://asr.api.speechmatics.com/v2/jobs/", {
-//     headers: {
-//       Authorization: `Bearer ${API_KEY}`,
-//     },
-//   });
-//   if (!response.ok) throw new Error("Failed to fetch jobs");
-//   return response.json();
-// }
-
-// async function fetchTranscript(jobId) {
-//   const response = await fetch(`https://asr.api.speechmatics.com/v2/jobs/${jobId}/transcript?format=txt`, {
-//     headers: {
-//       Authorization: `Bearer ${API_KEY}`,
-//     },
-//   });
-//   if (!response.ok) throw new Error(`Failed to fetch transcript for job ${jobId}`);
-//   return response.text();
-// }
-
-// document.getElementById("formSelector").addEventListener("change", async function () {
-//   if (this.value === "SavedTranscripts") {
-//     const container = document.getElementById("transcriptContainer");
-//     container.textContent = "Loading transcripts...";
-
-//     try {
-//       const jobsData = await fetchJobs();
-//       const jobs = jobsData.jobs || [];
-
-//       if (jobs.length === 0) {
-//         container.textContent = "No saved transcripts found.";
-//         return;
-//       }
-
-//       let transcriptsHtml = "";
-//       for (const job of jobs) {
-//         const transcriptText = await fetchTranscript(job.id);
-//         transcriptsHtml += `
-//           <div class="transcript-item">
-//             <h3>Job ID: ${job.id}</h3>
-//             <pre>${transcriptText}</pre>
-//           </div>
-//         `;
-//       }
-
-//       container.innerHTML = transcriptsHtml;
-//     } catch (error) {
-//       container.textContent = "Error loading transcripts.";
-//       console.error(error);
-//     }
-//   }
-// });
-
 
 document.getElementById("formSelector").addEventListener("change", function () {
   const val = this.value;
