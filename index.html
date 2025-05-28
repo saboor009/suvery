@@ -358,15 +358,24 @@ async function fetchJobs() {
     // Populate dropdown with job IDs and datetime (formatted)
 jobs.forEach(job => {
   const jobId = job.id;
-  const fileName = job.data_name || "Unnamed File"; // Use data_name instead of tracking.title
-  const timestamp = new Date(job.created_at).toLocaleString();
+  const fileName = job.data_name || "Unnamed File";
+
+  const timestamp = new Date(job.created_at);
+  const formattedDatetime = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short"
+  }).format(timestamp);
 
   const option = document.createElement("option");
   option.value = jobId;
-  option.textContent = `${fileName} - ${timestamp}`;
+  option.textContent = `${fileName} - ${formattedDatetime}`;
   jobSelector.appendChild(option);
 
-  console.log("Job object:", job); // For debugging
+  console.log("Job object:", job);
 });
 
 
