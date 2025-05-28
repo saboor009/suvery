@@ -336,7 +336,7 @@
     container.textContent = "";
 
     // Send transcript to webhook
-    const response = await fetch("https://acai.app.n8n.cloud/webhook-test/speechmatics", {
+    const response = await fetch("https://acai.app.n8n.cloud/webhook/speechmatics", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ transcriptText }),
@@ -391,7 +391,7 @@ async function fillFormFromWebhookTest() {
   status.textContent = "Fetching data from webhook-test...";
 
   try {
-    const response = await fetch("https://acai.app.n8n.cloud/webhook-test/speechmatics");
+    const response = await fetch("https://acai.app.n8n.cloud/webhook/speechmatics");
     if (!response.ok) throw new Error("Failed to fetch from webhook-test");
 
     const data = await response.json();
